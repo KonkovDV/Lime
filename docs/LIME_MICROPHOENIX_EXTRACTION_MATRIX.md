@@ -1,7 +1,7 @@
 ---
 title: "Lime MicroPhoenix Extraction Matrix"
 status: "active"
-version: "1.3.0"
+version: "1.4.0"
 last_updated: "2026-04-14"
 date: "2026-04-14"
 tags: [lime, microphoenix, extraction, matrix, standalone, mvp, architecture]
@@ -102,6 +102,19 @@ This means Lime should be:
 - secure-by-default at the HTTP and repository boundary
 - release-aware, but not process-bloated
 - product-shaped, not platform-shaped
+
+## Horizon Activation Model
+
+This extraction matrix defines Lime's H0 posture first and foremost. It should be read together with the horizon architecture in the main design document.
+
+The verified horizon interpretation is:
+
+- `H0` through `H2`: Lime remains a focused backend product with carefully widened seams.
+- `H3`: agentic and MCP surfaces become eligible, but only through explicit expansion rather than accidental drift.
+- `H4`: memory and context-engineering systems become first-class.
+- `H5`: Lime approaches full MicroPhoenix platform breadth.
+
+Important rule: in this matrix, **Exclude from MVP** means excluded from the current horizon boundary, not necessarily excluded forever. H3 through H5 are deliberate opt-in expansions that must preserve H0 core primitives rather than rewrite them.
 
 ## Preserve For Lime MVP
 

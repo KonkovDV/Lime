@@ -3,6 +3,11 @@ description: Suggest a new capability or repository improvement for Lime
 labels:
   - enhancement
 body:
+  - type: input
+    id: horizon
+    attributes:
+      label: Target horizon
+      description: "Which horizon does this primarily affect: H0, H1, H2, H3, H4, or H5?"
   - type: textarea
     id: problem
     attributes:

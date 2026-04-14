@@ -1,14 +1,14 @@
 # Lime
 
-Compatibility-first standalone AI chat backend blueprint and repository seed.
+Compatibility-first standalone AI chat backend blueprint and public repository seed.
 
-> Status: docs-first GitHub-ready seed. This folder contains the architecture blueprint, MicroPhoenix extraction matrix, and community-health surfaces for the future Lime repository. It does not yet claim a running backend implementation.
+> Status: published docs-first GitHub seed. This repository contains the architecture blueprint, MicroPhoenix extraction matrix, and community-health surfaces for Lime. It does not yet claim a running backend implementation.
 
 ## What This Folder Is
 
-This directory is a self-contained seed for a future standalone GitHub repository named `lime`.
+This directory is the self-contained public seed for the standalone GitHub repository named `Lime`.
 
-It exists so Lime can be published independently of the full `c:\plans` working tree.
+It exists so Lime can evolve independently of the full `c:\plans` working tree.
 
 The folder deliberately contains only:
 
@@ -23,6 +23,27 @@ It deliberately does **not** pretend that the implementation already exists.
 
 1. [Lime Standalone AI Chat Backend Design](docs/LIME_STANDALONE_AI_CHAT_BACKEND_DESIGN.md)
 2. [Lime MicroPhoenix Extraction Matrix](docs/LIME_MICROPHOENIX_EXTRACTION_MATRIX.md)
+
+## Architecture Horizons
+
+The blueprint now carries a verified H0-H5 horizon model grounded in the live MicroPhoenix codebase.
+
+1. `H0` — OpenAI-compatible chat backend MVP
+2. `H1` — multi-provider + PostgreSQL + Redis + JWT
+3. `H2` — event maturity + embeddings + retrieval
+4. `H3` — agents + tools + MCP + firewall activation
+5. `H4` — memory planes + context engine + graph-backed retrieval
+6. `H5` — near-full MicroPhoenix platform convergence
+
+The verified live-code census used for that model is:
+
+1. `67` domain subdirectories
+2. `77` infrastructure subdirectories
+3. `35` application subdirectories
+4. `29` core subdirectories
+5. `~291K` source LOC
+
+The full horizon map and seam-budget rules live in the design document.
 
 ## Claim Boundary
 
@@ -43,20 +64,21 @@ Not implemented in this folder:
 
 That omission is intentional. Until the code scaffold exists, adding fake CI or dependency automation would create false trust signals.
 
-## How To Publish This Folder As Its Own GitHub Repository
+## GitHub Status
 
-1. Create an empty GitHub repository named `lime`.
-2. Copy the contents of this folder so that `README.md` from this folder becomes the repository root `README.md`.
-3. Push the folder contents as the initial commit to `https://github.com/KonkovDV/Lime`.
-4. After repository creation, enable:
-   - dependency graph
-   - secret scanning
-   - push protection
-   - private vulnerability reporting
-   - branch protection or rulesets for `main`
-5. Only after the runtime scaffold exists, add CI, Dependabot, CodeQL, and release automation.
+This seed is already published at:
 
-This seed already includes `CODEOWNERS` and issue/PR surfaces so the future repository starts with basic governance instead of retrofitting it later.
+1. `https://github.com/KonkovDV/Lime`
+
+Current public-repo state:
+
+1. community-health files are present;
+2. issue and PR surfaces are present;
+3. `CODEOWNERS` is present;
+4. the definitive H0-H5 architecture map is documented;
+5. runtime code is intentionally absent.
+
+Before raising the repo to Standard-tier OSS automation, add the real runtime scaffold first, then wire truthful CI, dependency automation, and CodeQL around actual code.
 
 ## Recommended Next Step
 

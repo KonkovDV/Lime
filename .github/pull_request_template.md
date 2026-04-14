@@ -19,6 +19,15 @@
 - [ ] documentation was updated when public-facing claims changed
 - [ ] implemented vs planned vs research-informed claims remain accurate
 
+## Horizon Impact
+
+- [ ] H0
+- [ ] H1
+- [ ] H2
+- [ ] H3
+- [ ] H4
+- [ ] H5
+
 ## Risk Review
 
 - [ ] no secrets or private infrastructure details were exposed

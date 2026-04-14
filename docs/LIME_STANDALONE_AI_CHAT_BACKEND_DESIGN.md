@@ -1,7 +1,7 @@
 ---
 title: "Lime Standalone AI Chat Backend Design"
 status: "active"
-version: "1.2.1"
+version: "1.3.0"
 last_updated: "2026-04-14"
 date: "2026-04-14"
 tags: [lime, standalone, ai, chat, backend, express, typescript, openai, architecture, oss]
@@ -214,6 +214,238 @@ Lime is **not** trying to become:
 - healthcare-specific modules and workflows
 
 The companion extraction matrix provides the exact rationale and source mapping.
+
+## Verified MicroPhoenix Census
+
+This blueprint is now cross-referenced against the live MicroPhoenix codebase as of `2026-04-14`, not only against earlier design intent.
+
+Verified first-level subsystem counts in `c:\plans\src`:
+
+- Domain subdirectories: `67`
+- Infrastructure subdirectories: `77`
+- Application subdirectories: `35`
+- Core subdirectories: `29`
+- Source LOC baseline: `~291,114`
+- DI registry scale: `170+` tokens in a `1749`-line `src/core/di/DI_TOKENS.ts`
+
+Representative live-code anchors used during this verification pass:
+
+- `src/domain/ai/ILLMAdapter.ts`
+- `src/domain/events/IEventStore.ts`
+- `src/domain/events/IEventBus.ts`
+- `src/domain/security/tool-execution-policy.interface.ts`
+- `src/domain/context/ISemanticPagingService.ts`
+- `src/domain/context/IHybridRetrievalService.ts`
+- `src/domain/context/IPromptCompressor.ts`
+- `src/domain/memory/IWorkingMemory.ts`
+- `src/domain/mcp/IMcpBridge.ts`
+- `src/domain/a2a/IAgentCardProvider.ts`
+- `src/domain/a2a/IA2AAuthorizationGuard.ts`
+- `src/domain/swarm/ISwarmOrchestrator.ts`
+- `src/domain/platform/IPlatformAdapter.ts`
+- `src/domain/security/IConstitutionalGuard.ts`
+
+This matters because Lime's roadmap should activate seams already visible in MicroPhoenix rather than inventing a second architecture lineage.
+
+## Definitive Horizon Architecture
+
+Lime should be understood as a horizon-based extraction from MicroPhoenix rather than a one-shot clone. Each horizon adds ports, adapters, and tokens, but should not rewrite the core primitives established in H0.
+
+### Horizon Summary
+
+| Horizon | Goal | Representative capability families | Approx cumulative DI tokens | Approx cumulative LOC |
+| --- | --- | --- | --- | --- |
+| `H0` | Chat backend MVP | chat completions, SSE, in-memory state, zero-infra dev mode | `9` | `~4K` |
+| `H1` | Multi-provider + persistence | Anthropic/Ollama, PostgreSQL, Redis, JWT | `15` | `~8K` |
+| `H2` | Event maturity + RAG | GSN, replay, embeddings, vector retrieval, prompt compression | `25` | `~18K` |
+| `H3` | Agents + tools + MCP | tool firewall, MCP bridge, agent runner, sandbox, platform abstraction | `43` | `~40K` |
+| `H4` | Memory planes + context engine | working/summary/governance/archival memory, S-MMU, predictive context, graph-backed retrieval | `69` | `~80K` |
+| `H5` | Full MicroPhoenix platform | MAS, A2A, swarm, channels, plugins, advanced security, broader governance | `170+` | `~291K` |
+
+### H0: Chat Backend MVP
+
+H0 is the smallest honest Lime.
+
+Functional port set centered across domain and core:
+
+- `ILLMAdapter`
+- `IConversationRepository`
+- `IEventStore`
+- `IEventBus`
+- `ICache`
+- `IStructuredLogger`
+
+Core surfaces carried from MicroPhoenix in simplified form:
+
+- DI container with circular dependency guard and a dormant scoped-lifecycle seam
+- `Result<T>` monad
+- namespaced Zod config loader
+- request context via `AsyncLocalStorage`
+- bootstrap orchestrator
+- graceful shutdown guard
+- typed app errors
+
+Representative H0 adapters:
+
+- `MockLLMAdapter`
+- `OpenAIAdapter`
+- `InMemoryConversationRepository`
+- `InMemoryEventStore`
+- `InMemoryEventBus`
+- `InMemoryCache`
+- `PinoLogger`
+- `AppServer`
+
+Representative H0 application surfaces:
+
+- `ChatService`
+- `ChatController`
+- `HealthController`
+- `ConversationController`
+- request-context middleware
+- request-logger middleware
+- API auth middleware
+- error-handler middleware
+
+Required architecture gates at H0:
+
+- domain must not import infrastructure
+- every port must have an adapter
+- every DI token must resolve
+- no `process.env` access outside config loading
+- circular dependency detection must stay active
+
+### H1: Multi-Provider + Persistence
+
+H1 raises Lime from a pure in-memory chat backend to a durable backend product.
+
+Representative additions:
+
+- `ILLMAdapterFactory`
+- `IAuthProvider`
+- `IDatabaseConnection`
+- `IMigrationRunner`
+- Anthropic and Ollama adapters
+- PostgreSQL connection and persistence adapters
+- Redis cache adapter
+- JWT auth provider
+
+H1 keeps H0's public contract intact while swapping dev-mode adapters for durable production adapters.
+
+### H2: Event Maturity + RAG
+
+H2 activates the first serious retrieval and event-maturity seams already present in MicroPhoenix.
+
+Representative verified families:
+
+- vector store and embedding-related ports
+- memory extraction and consolidation ports
+- event projection and replay surfaces
+- context ports such as `ISemanticPagingService`, `IHybridRetrievalService`, and `IPromptCompressor`
+
+This is the point where event envelopes should activate stronger fields such as causation chains and ordered replay metadata rather than redefining the event primitive.
+
+### H3: Agents + Tools + MCP
+
+H3 is where Lime stops being just a backend and begins to admit agentic control-plane behavior.
+
+Representative verified anchors:
+
+- `src/domain/security/tool-execution-policy.interface.ts`
+- `src/domain/mcp/IMcpBridge.ts`
+- `src/domain/platform/IPlatformAdapter.ts`
+
+Representative capability families:
+
+- tool registry and tool execution policy
+- prompt-injection and output-rail security
+- user approval interception for destructive paths
+- agent runner and registry
+- sandbox execution strategy
+- MCP server and bridge ports
+- cross-platform adapter requirements
+
+Hard invariants introduced here:
+
+- every tool call must pass the firewall policy
+- no `process.platform` usage above Infrastructure
+- human approval interception becomes first-class for destructive actions
+
+### H4: Memory Planes + Context Engine
+
+H4 activates MicroPhoenix's deeper memory and context-engineering lineage.
+
+Representative verified anchors:
+
+- `IWorkingMemory`
+- `ISemanticPagingService`
+- `IHybridRetrievalService`
+- `IPromptCompressor`
+- `IConstitutionalGuard`
+
+Representative capability families:
+
+- working, summary, governance, and archival memory planes
+- memory access policy and integrity
+- semantic paging and predictive context
+- hybrid retrieval and reranking
+- code graph and structural context services
+
+At this horizon, Lime becomes a context-engineering system rather than only a chat API.
+
+### H5: Full MicroPhoenix Platform
+
+H5 is the convergence horizon where Lime approaches full MicroPhoenix breadth.
+
+Representative verified anchors:
+
+- `IAgentCardProvider`
+- `IA2AAuthorizationGuard`
+- `ISwarmOrchestrator`
+
+Representative capability families:
+
+- multi-agent runtime and decomposition
+- A2A protocol and commerce rails
+- swarm orchestration
+- channel dispatch and delivery policies
+- plugin ecosystem surfaces
+- constitutional and advanced security governance
+- broader evaluation, routing, and planning systems
+
+This horizon is intentionally not the default product trajectory. Reaching it means Lime is no longer only a compatibility-first backend; it is becoming a platform.
+
+## Architecture Test Gates By Horizon
+
+| Gate | H0 | H1 | H2 | H3 | H4 | H5 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Domain must not import Infrastructure | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Port-adapter parity | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| DI token completeness | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| No `process.env` outside config | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Circular dependency detection | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Tool firewall coverage | — | — | — | ✅ | ✅ | ✅ |
+| No `process.platform` above Infrastructure | — | — | — | ✅ | ✅ | ✅ |
+| Event GSN monotonicity | — | — | ✅ | ✅ | ✅ | ✅ |
+| Memory access policy tests | — | — | — | — | ✅ | ✅ |
+| A2A card compliance | — | — | — | — | — | ✅ |
+
+## Core Primitive Seam Budget
+
+The non-negotiable rule across all horizons is that horizons add seams; they do not break the original core primitives.
+
+| Core primitive | Defined in | Later-horizon rule |
+| --- | --- | --- |
+| `DIContainer` | H0 | may activate scoped lifecycle later, but must not be rewritten as a different container model |
+| `Result<T>` | H0 | never replaced |
+| `DomainEvent` | H0 | may activate additional fields, but should not be redefined incompatibly |
+| `RequestContext` | H0 | may widen through optional fields, but should remain the same primitive |
+| `AppError` hierarchy | H0 | new subclasses are fine; the base model should remain stable |
+| DI module registration pattern | H0 | never replaced with hidden global wiring |
+| Bootstrap orchestrator | H0 | gains phases, but stays the orchestration primitive |
+| Graceful shutdown | H0 | can grow tool/event cleanup phases later, but should remain an explicit controlled shutdown surface |
+
+If a future horizon requires a breaking rewrite of one of these primitives, that is a signal that H0 laid the wrong seam.
 
 ## System Context
 
@@ -499,7 +731,8 @@ Reasons:
 ### Container Semantics
 
 - registration is factory-based
-- supported lifecycles: `singleton`, `transient`
+- active H0 lifecycles: `singleton`, `transient`
+- `scoped` may exist as a dormant seam, but should not be activated until a later horizon actually needs request- or task-bound scoping
 - resolution errors are explicit and fatal during bootstrap
 - disposal walks singleton instances in reverse registration order when they expose `close`, `stop`, or `dispose`
 
@@ -896,7 +1129,7 @@ export default defineConfig({
 ### `src/core/di/container.ts`
 
 ```ts
-export type Lifecycle = 'singleton' | 'transient'
+export type Lifecycle = 'singleton' | 'transient' | 'scoped'
 
 interface Registration<T> {
   factory: (container: DIContainer) => T
@@ -934,6 +1167,10 @@ export class DIContainer {
         this.disposalStack.push(registration.instance)
       }
       return registration.instance as T
+    }
+
+    if (registration.lifecycle === 'scoped') {
+      throw new Error(`Scoped lifecycle is reserved for later horizon activation: ${token}`)
     }
 
     this.resolving.add(token)
@@ -1267,6 +1504,8 @@ GitHub rulesets should protect `main` with at least:
 Push protection should be enabled because it blocks secrets before they enter history.
 
 ## Implementation Roadmap
+
+Phases A through E below are the execution sequence for H0 plus the first durable H1 surfaces. H2 through H5 are strategic expansion horizons, not immediate implementation obligations.
 
 ### Phase A: Scaffold
 
