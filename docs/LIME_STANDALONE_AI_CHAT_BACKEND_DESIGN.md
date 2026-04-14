@@ -1,7 +1,7 @@
 ---
 title: "Lime Standalone AI Chat Backend Design"
 status: "active"
-version: "1.1.0"
+version: "1.2.1"
 last_updated: "2026-04-14"
 date: "2026-04-14"
 tags: [lime, standalone, ai, chat, backend, express, typescript, openai, architecture, oss]
@@ -100,7 +100,7 @@ The exact preserve/adapt/defer/exclude matrix lives in the companion extraction 
 | Express security guide | Helmet, input distrust, fingerprint reduction, secure cookies, brute-force controls | Security middleware baseline |
 | TypeScript docs and TS 6 release notes | TS 6.0.2 is current, `moduleResolution node` deprecated, `baseUrl` deprecated, `types` default now `[]`, `rootDir` defaults changed | Explicit TS 6 config, avoid deprecated options |
 | Vitest docs and migration guide | Vitest 4.1.x is current, Node 20+, Vite 6+, improved AST-aware coverage remapping | Use Vitest 4 with explicit coverage include/exclude |
-| OpenAI docs | Responses API preferred for new OpenAI-native apps, Chat Completions still supported, `developer` role, SDK exposes retries, request IDs, streaming, custom logger | Keep external Chat Completions compatibility; provider adapter abstracts future migration |
+| OpenAI docs | Responses API is recommended for all new projects, Chat Completions still supported, `developer` role, SDK exposes retries, request IDs, streaming, custom logger | Keep external Chat Completions compatibility; provider adapter abstracts future migration |
 | npm package pages | exact stable package versions for Express, TypeScript, Vitest, OpenAI SDK | Version baseline table |
 | Docker multi-stage docs | named stages, BuildKit-aware builds, stage targeting, artifact copying | Use named multi-stage Dockerfile |
 | GitHub docs on push protection, rulesets, artifact attestations | repo hardening, secret scanning, provenance, SLSA alignment | Standard and Production publication tiers |
@@ -532,13 +532,14 @@ Do:
 - set `rootDir` explicitly
 - set `types` explicitly
 - use `moduleResolution: "NodeNext"`
-- use explicit `paths` without `baseUrl`
+- prefer relative imports in the first implementation to avoid unresolved alias strings in plain NodeNext runtime output
 
 Do not:
 
 - use `moduleResolution: "node"`
 - rely on implicit `types`
 - use `baseUrl`
+- ship raw `@core/*`-style alias imports under plain `tsc` + `node` without an explicit rewrite or resolver layer
 - target `es5`
 
 ### Runtime Config Schema
@@ -844,13 +845,6 @@ lime/
     "rootDir": "./src",
     "outDir": "./dist",
     "types": ["node"],
-    "paths": {
-      "@core/*": ["./src/core/*"],
-      "@domain/*": ["./src/domain/*"],
-      "@app/*": ["./src/application/*"],
-      "@infra/*": ["./src/infrastructure/*"],
-      "@bootstrap/*": ["./src/bootstrap/*"]
-    },
     "skipLibCheck": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true
@@ -858,6 +852,8 @@ lime/
   "include": ["src/**/*.ts"]
 }
 ```
+
+The first implementation should prefer relative imports. If import aliases become desirable later, add an explicit post-emit rewrite such as `tsc-alias` or a bundler/runtime resolver instead of relying on TypeScript `paths` alone.
 
 ### `vitest.config.ts`
 
@@ -911,6 +907,7 @@ interface Registration<T> {
 export class DIContainer {
   private readonly registry = new Map<string, Registration<unknown>>()
   private readonly disposalStack: unknown[] = []
+  private readonly resolving = new Set<string>()
 
   register<T>(token: string, factory: (container: DIContainer) => T, lifecycle: Lifecycle = 'singleton'): void {
     this.registry.set(token, { factory, lifecycle })
@@ -922,15 +919,29 @@ export class DIContainer {
       throw new Error(`Unregistered token: ${token}`)
     }
 
+    if (this.resolving.has(token)) {
+      throw new Error(`Circular dependency detected while resolving: ${token}`)
+    }
+
     if (registration.lifecycle === 'singleton') {
       if (registration.instance === undefined) {
-        registration.instance = registration.factory(this)
+        this.resolving.add(token)
+        try {
+          registration.instance = registration.factory(this)
+        } finally {
+          this.resolving.delete(token)
+        }
         this.disposalStack.push(registration.instance)
       }
       return registration.instance as T
     }
 
-    return registration.factory(this) as T
+    this.resolving.add(token)
+    try {
+      return registration.factory(this) as T
+    } finally {
+      this.resolving.delete(token)
+    }
   }
 
   async dispose(): Promise<void> {
@@ -944,11 +955,13 @@ export class DIContainer {
 }
 ```
 
+This MVP skeleton intentionally uses generic reverse-order disposal. When durable `EventStore` and `EventBus` production adapters are introduced in Phase D, shutdown should be upgraded to dependency-aware phased teardown rather than relying only on duck-typed reverse disposal.
+
 ### `src/domain/ai/ILLMAdapter.ts`
 
 ```ts
 export interface ChatMessage {
-  role: 'system' | 'user' | 'assistant'
+  role: 'system' | 'developer' | 'user' | 'assistant'
   content: string
 }
 
@@ -1018,6 +1031,7 @@ export class OpenAIAdapter implements ILLMAdapter {
         completionTokens: completion.usage?.completion_tokens ?? 0,
         totalTokens: completion.usage?.total_tokens ?? 0,
       },
+      // SDK v6 exposes _request_id for observability; re-verify this field on each major SDK bump.
       providerRequestId: completion._request_id,
     }
   }
@@ -1283,6 +1297,8 @@ Push protection should be enabled because it blocks secrets before they enter hi
 - Redis optional cache
 - Prometheus metrics
 
+Phase D is also the point where shutdown should move from generic reverse disposal to dependency-aware phased teardown if durable eventing or outbox-like delivery semantics are introduced.
+
 ### Phase E: Hardening
 
 - tests and architecture gates
@@ -1310,7 +1326,7 @@ Lime is considered complete for MVP when all of the following are true:
 | Risk | Impact | Countermeasure |
 | --- | --- | --- |
 | External contract drift from OpenAI-compatible behavior | client breakage | golden contract tests on response shapes |
-| GPT-5.4 Chat Completions restriction | tool calling unavailable with `reasoning: none` | monitor deprecation signals; plan Responses-native adapter for v1.1+ |
+| GPT-5.4 Chat Completions restriction | tool calling unavailable with `reasoning: none` | fail fast with a clear adapter-level error when a future tool-enabled request targets this unsupported combination; monitor deprecation signals and plan Responses-native adapter for v1.1+ |
 | TS 6 configuration drift | build friction | explicit `rootDir`, `types`, `NodeNext`, no `baseUrl` |
 | Overengineering the MVP | delay | strict non-goals and phased roadmap |
 | In-memory dev mode masking prod issues | deployment surprises | Postgres integration tests and readiness probes |
@@ -1381,3 +1397,13 @@ As of 2026-04-14:
 - Assistants API deprecated August 26, 2025; sunset date August 26, 2026.
 - GitHub docs state artifact attestations provide SLSA Build Level 2 by themselves.
 - SLSA v1.2 still requires hosted builders, provenance distribution, and stronger isolation for higher levels.
+
+## Responses Migration Triggers
+
+Lime should remain Chat-Completions-compatible at the northbound edge until one of these conditions becomes true:
+
+1. OpenAI publishes a formal Chat Completions deprecation notice.
+2. More than half of the target client ecosystem natively prefers Responses-format integration over Chat Completions compatibility.
+3. Lime needs GPT-5.4+ tool calling in scenarios where Chat Completions restrictions materially block product behavior.
+
+At that point, the southbound adapter should switch to Responses-first while preserving Lime's external compatibility contract wherever possible.

@@ -1,7 +1,7 @@
 ---
 title: "Lime MicroPhoenix Extraction Matrix"
 status: "active"
-version: "1.2.0"
+version: "1.3.0"
 last_updated: "2026-04-14"
 date: "2026-04-14"
 tags: [lime, microphoenix, extraction, matrix, standalone, mvp, architecture]
@@ -58,7 +58,7 @@ This table is the primary extraction control surface for Lime. It covers the ful
 | DI and token registry | large token estate across many domains | Adapt | keep container semantics, shrink token catalog to Lime boundary | split by modules later if token count grows |
 | Config and environment | broad Zod schema for many domains and modes | Adapt | keep typed load and fail-fast startup, reduce to chat/runtime variables only | add profiles and secrets backends later |
 | Public API surface | large route/controller estate | Adapt | keep chat completions, health, metrics optional, conversation CRUD | add admin/reporting routes only after actual need |
-| Provider abstraction | clean port/adapter pattern around LLMs | Preserve | keep `ILLMAdapter` and concrete adapters with streaming | add Anthropic/local adapters later |
+| Provider abstraction | clean port/adapter pattern around LLMs | Adapt | preserve the boundary but redesign the interface from prompt-centric plus callback streaming to chat-centric plus `AsyncGenerator` streaming | add Anthropic/local adapters later |
 | Eventing | rich append-only event infrastructure | Adapt | keep immutable events and append-only save path, reduce query surface | add replay/GSN/correlation queries later |
 | Persistence | multiple adapters and storage choices | Adapt | in-memory dev mode plus PostgreSQL prod mode | introduce read models or CQRS only if load justifies |
 | Request context and tracing | rich ALS context with many fields | Adapt | keep `correlationId`, `requestId`, `startTime`, optional `userId` | add baggage and cross-service trace fields later |
@@ -167,6 +167,17 @@ This is the architectural hinge that makes Lime more than an OpenAI wrapper.
 
 - preserve the port concept strictly
 - narrow the interface surface to MVP needs
+
+### 3a. LLM Interface Surface Is An Adaptation, Not A Literal Preserve
+
+MicroPhoenix's LLM interface is broader and more provider-generic than Lime MVP needs.
+
+Lime intentionally redesigns this surface in two ways:
+
+1. prompt-centric generation becomes chat-centric generation because the northbound contract is Chat Completions compatible;
+2. callback-based streaming becomes `AsyncGenerator` streaming because SSE composition is cleaner and easier to test in a standalone HTTP backend.
+
+This is a deliberate improvement, not a loss of architectural lineage.
 
 ### 4. Typed Config Loading
 

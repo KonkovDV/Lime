@@ -31,7 +31,7 @@ Implemented in this folder:
 1. repository-ready documentation package;
 2. public-facing project identity;
 3. extraction boundary and MVP rules;
-4. GitHub contribution and issue surfaces.
+4. GitHub contribution, CODEOWNERS, and issue surfaces.
 
 Not implemented in this folder:
 
@@ -47,7 +47,7 @@ That omission is intentional. Until the code scaffold exists, adding fake CI or 
 
 1. Create an empty GitHub repository named `lime`.
 2. Copy the contents of this folder so that `README.md` from this folder becomes the repository root `README.md`.
-3. Push the folder contents as the initial commit.
+3. Push the folder contents as the initial commit to `https://github.com/KonkovDV/Lime`.
 4. After repository creation, enable:
    - dependency graph
    - secret scanning
@@ -55,6 +55,8 @@ That omission is intentional. Until the code scaffold exists, adding fake CI or 
    - private vulnerability reporting
    - branch protection or rulesets for `main`
 5. Only after the runtime scaffold exists, add CI, Dependabot, CodeQL, and release automation.
+
+This seed already includes `CODEOWNERS` and issue/PR surfaces so the future repository starts with basic governance instead of retrofitting it later.
 
 ## Recommended Next Step
 

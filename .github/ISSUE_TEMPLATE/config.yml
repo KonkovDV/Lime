@@ -1,1 +1,8 @@
 blank_issues_enabled: false
+contact_links:
+  - name: Security policy
+    url: https://github.com/KonkovDV/Lime/blob/main/SECURITY.md
+    about: Do not open public issues for vulnerabilities. Read the private reporting guidance first.
+  - name: Support
+    url: https://github.com/KonkovDV/Lime/blob/main/SUPPORT.md
+    about: Read the current support expectations before opening a request.
