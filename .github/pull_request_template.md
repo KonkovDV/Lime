@@ -1,0 +1,29 @@
+# Summary
+
+## What changed?
+
+- 
+
+## Why was this change needed?
+
+- 
+
+## Validation
+
+- [ ] changed-file diagnostics were checked
+- [ ] the narrowest honest validation for the blast radius was run
+- [ ] broader validation was run when the change touched public behavior, packaging, or security surfaces
+
+## Docs and Claim Boundary
+
+- [ ] documentation was updated when public-facing claims changed
+- [ ] implemented vs planned vs research-informed claims remain accurate
+
+## Risk Review
+
+- [ ] no secrets or private infrastructure details were exposed
+- [ ] no unrelated churn was mixed into the change without necessity
+
+## Notes for Reviewers
+
+- 

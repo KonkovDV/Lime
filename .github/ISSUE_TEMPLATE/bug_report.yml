@@ -1,0 +1,31 @@
+name: Bug report
+description: Report a reproducible bug or factual error in Lime
+labels:
+  - bug
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is wrong and what should be true instead?
+    validations:
+      required: true
+  - type: textarea
+    id: location
+    attributes:
+      label: Affected file or section
+      description: Include the smallest relevant path, heading, or excerpt.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction or evidence
+      description: Show the smallest reproducible proof, official source, or contradiction.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Redact secrets and never include private credentials.

@@ -1,0 +1,24 @@
+name: Feature request
+description: Suggest a new capability or repository improvement for Lime
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What gap should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the expected architecture, repository surface, or future behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Relevant MVP boundary, GitHub publication requirement, or runtime implication.
